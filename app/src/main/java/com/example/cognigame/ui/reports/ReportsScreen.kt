@@ -28,7 +28,17 @@ data class DisplayScore(
     val maxScore: Int,
     val icon: ImageVector,
     val color: Color,
-    val trend: String
+    val trend: String,
+    val sessionsPlayed: Int = 0
+)
+
+val tips = listOf(
+    "Play Memory Match 2-3 times today. Repetition strengthens memory!",
+    "Try Quick Math to keep your number skills sharp.",
+    "Emoji Puzzle helps with word-association. Give it a go!",
+    "Sequence Memory is great for short-term memory. Play daily!",
+    "Pattern Game trains your visual memory. Try to beat your score!",
+    "Word Recall improves vocabulary memory. Practice a few rounds!"
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -85,12 +95,28 @@ fun ReportsScreen(
                     "emoji_puzzle" -> Teal40
                     else -> Green40
                 },
-                trend = score.trend
+                trend = score.trend,
+                sessionsPlayed = score.sessionsPlayed
             )
         }
     }
 
-    val overallScore = if (scores.isEmpty()) 0 else scores.map { it.score }.average().toInt()
+    val playedScores = scores.filter { it.sessionsPlayed > 0 }
+    val overallScore = if (playedScores.isEmpty()) 0
+    else playedScores.map {
+        if (it.maxScore > 0) (it.score * 100) / it.maxScore else 0
+    }.average().toInt()
+
+    val totalSessions = scores.sumOf { it.sessionsPlayed }
+
+    val currentTip = remember(playedScores.size) {
+        val leastPlayed = scores.minByOrNull { it.sessionsPlayed }
+        if (leastPlayed != null && leastPlayed.sessionsPlayed == 0) {
+            "Try ${leastPlayed.game} — you haven't played it yet!"
+        } else {
+            tips.random()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -109,109 +135,142 @@ fun ReportsScreen(
             )
         }
     ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(16.dp)
-                .verticalScroll(rememberScrollState())
-        ) {
-            Card(
-                shape = RoundedCornerShape(20.dp),
-                modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
-                colors = CardDefaults.cardColors(containerColor = Teal40)
+        if (isLoading) {
+            Box(
+                modifier = Modifier.fillMaxSize().padding(padding),
+                contentAlignment = Alignment.Center
             ) {
-                Column(
-                    modifier = Modifier.padding(20.dp).fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text("Overall Cognitive Score", fontSize = 16.sp, color = Color.White.copy(alpha = 0.8f))
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text("$overallScore%", fontSize = 44.sp, color = Color.White)
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        when {
-                            overallScore >= 80 -> "Excellent performance!"
-                            overallScore >= 60 -> "Good progress, keep going!"
-                            else -> "Keep practicing, you'll improve!"
-                        },
-                        fontSize = 14.sp,
-                        textAlign = TextAlign.Center,
-                        color = Color.White.copy(alpha = 0.9f)
-                    )
-                }
+                CircularProgressIndicator(color = Teal40)
             }
-
-            Text(
-                "Game Scores",
-                style = MaterialTheme.typography.titleLarge,
-                color = Teal40,
-                modifier = Modifier.padding(bottom = 10.dp)
-            )
-
-            for (score in scores) {
+        } else {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(16.dp)
+                    .verticalScroll(rememberScrollState())
+            ) {
                 Card(
-                    shape = RoundedCornerShape(14.dp),
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                    shape = RoundedCornerShape(20.dp),
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                    colors = CardDefaults.cardColors(containerColor = Teal40)
                 ) {
-                    Column(modifier = Modifier.padding(14.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Surface(
-                                modifier = Modifier.size(40.dp),
-                                shape = RoundedCornerShape(10.dp),
-                                color = score.color.copy(alpha = 0.15f)
-                            ) {
-                                Icon(
-                                    score.icon,
-                                    contentDescription = null,
-                                    modifier = Modifier.padding(8.dp),
-                                    tint = score.color
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(score.game, fontSize = 15.sp, color = Color.Black)
-                                Text(score.trend, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            }
-                            Text("${score.score}%", fontSize = 18.sp, color = score.color)
-                        }
-                        Spacer(modifier = Modifier.height(10.dp))
-                        LinearProgressIndicator(
-                            progress = (score.score.toFloat() / score.maxScore.toFloat()).coerceIn(0f, 1f),
-                            modifier = Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp)),
-                            color = score.color,
-                            trackColor = score.color.copy(alpha = 0.15f)
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Card(
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = GameYellow.copy(alpha = 0.15f))
-            ) {
-                Row(
-                    modifier = Modifier.padding(14.dp),
-                    verticalAlignment = Alignment.Top
-                ) {
-                    Icon(Icons.Default.Lightbulb, null, tint = GameYellow, modifier = Modifier.size(24.dp))
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Column {
-                        Text("Tip for Today", fontSize = 14.sp, color = GameYellow)
+                    Column(
+                        modifier = Modifier.padding(20.dp).fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text("Overall Cognitive Score", fontSize = 16.sp, color = Color.White.copy(alpha = 0.8f))
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text("$overallScore%", fontSize = 44.sp, color = Color.White)
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            "Try playing Memory Match 2-3 times today. Repetition helps strengthen memory!",
-                            fontSize = 13.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            when {
+                                overallScore >= 80 -> "Excellent performance!"
+                                overallScore >= 60 -> "Good progress, keep going!"
+                                overallScore > 0 -> "Keep practicing, you'll improve!"
+                                else -> "Play some games to see your score!"
+                            },
+                            fontSize = 14.sp,
+                            textAlign = TextAlign.Center,
+                            color = Color.White.copy(alpha = 0.9f)
                         )
+                        if (totalSessions > 0) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                "Total sessions: $totalSessions",
+                                fontSize = 12.sp,
+                                color = Color.White.copy(alpha = 0.7f)
+                            )
+                        }
+                    }
+                }
+
+                Text(
+                    "Game Scores",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = Teal40,
+                    modifier = Modifier.padding(bottom = 10.dp)
+                )
+
+                for (score in scores) {
+                    val percentage = if (score.maxScore > 0) (score.score * 100) / score.maxScore else 0
+                    Card(
+                        shape = RoundedCornerShape(14.dp),
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 10.dp),
+                        colors = CardDefaults.cardColors(containerColor = Color.White),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(14.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Surface(
+                                    modifier = Modifier.size(40.dp),
+                                    shape = RoundedCornerShape(10.dp),
+                                    color = score.color.copy(alpha = 0.15f)
+                                ) {
+                                    Icon(
+                                        score.icon,
+                                        contentDescription = null,
+                                        modifier = Modifier.padding(8.dp),
+                                        tint = score.color
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(score.game, fontSize = 15.sp, color = Color.Black)
+                                    Text(
+                                        if (score.sessionsPlayed > 0) {
+                                            "${score.sessionsPlayed} sessions \u2022 ${score.trend}"
+                                        } else {
+                                            score.trend
+                                        },
+                                        fontSize = 12.sp,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                Text(
+                                    if (score.sessionsPlayed > 0) "$percentage%" else "---",
+                                    fontSize = 18.sp,
+                                    color = if (score.sessionsPlayed > 0) score.color else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(10.dp))
+                            LinearProgressIndicator(
+                                progress = if (score.maxScore > 0) {
+                                    (score.score.toFloat() / score.maxScore.toFloat()).coerceIn(0f, 1f)
+                                } else 0f,
+                                modifier = Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp)),
+                                color = score.color,
+                                trackColor = score.color.copy(alpha = 0.15f)
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Card(
+                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = GameYellow.copy(alpha = 0.15f))
+                ) {
+                    Row(
+                        modifier = Modifier.padding(14.dp),
+                        verticalAlignment = Alignment.Top
+                    ) {
+                        Icon(Icons.Default.Lightbulb, null, tint = GameYellow, modifier = Modifier.size(24.dp))
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Column {
+                            Text("Tip for Today", fontSize = 14.sp, color = GameYellow)
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                currentTip,
+                                fontSize = 13.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 }
             }
