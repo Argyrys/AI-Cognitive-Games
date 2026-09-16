@@ -1,5 +1,9 @@
 package com.example.cognigame.ui.settings
 
+import android.os.Build
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -13,21 +17,40 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.cognigame.CogniGameApp
 import com.example.cognigame.ui.theme.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(navController: NavController) {
-    var selectedLanguage by remember { mutableStateOf("English") }
-    var textScale by remember { mutableStateOf(1.0f) }
-    var highContrast by remember { mutableStateOf(false) }
-    var soundEnabled by remember { mutableStateOf(true) }
-    var vibrationEnabled by remember { mutableStateOf(true) }
+    val context = LocalContext.current
+    val app = context.applicationContext as CogniGameApp
+    val settingsManager = app.settingsManager
+
+    val language by settingsManager.language.collectAsState()
+    val textScale by settingsManager.textScale.collectAsState()
+    val highContrast by settingsManager.highContrast.collectAsState()
+    val soundEnabled by settingsManager.soundEnabled.collectAsState()
+    val vibrationEnabled by settingsManager.vibrationEnabled.collectAsState()
 
     val languages = listOf("English", "Assamese", "Bengali", "Manipuri", "Hindi", "Nagamese")
+
+    fun vibrate() {
+        if (vibrationEnabled) {
+            val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                val vibratorManager = context.getSystemService(VibratorManager::class.java)
+                vibratorManager.defaultVibrator
+            } else {
+                @Suppress("DEPRECATION")
+                context.getSystemService(Vibrator::class.java)
+            }
+            vibrator.vibrate(VibrationEffect.createOneShot(50, VibrationEffect.DEFAULT_AMPLITUDE))
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -45,7 +68,7 @@ fun SettingsScreen(navController: NavController) {
                 )
             )
         }
-        ) { innerPadding ->
+    ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -74,8 +97,11 @@ fun SettingsScreen(navController: NavController) {
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             RadioButton(
-                                selected = selectedLanguage == lang,
-                                onClick = { selectedLanguage = lang },
+                                selected = language == lang,
+                                onClick = {
+                                    settingsManager.setLanguage(lang)
+                                    vibrate()
+                                },
                                 colors = RadioButtonDefaults.colors(selectedColor = Teal40)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
@@ -101,7 +127,7 @@ fun SettingsScreen(navController: NavController) {
                         Text("A", fontSize = 14.sp)
                         Slider(
                             value = textScale,
-                            onValueChange = { textScale = it },
+                            onValueChange = { settingsManager.setTextScale(it) },
                             valueRange = 0.8f..1.5f,
                             modifier = Modifier.weight(1f).padding(horizontal = 8.dp),
                             colors = SliderDefaults.colors(thumbColor = Teal40, activeTrackColor = Teal40)
@@ -122,7 +148,10 @@ fun SettingsScreen(navController: NavController) {
                         title = "High Contrast",
                         subtitle = "Makes text and buttons easier to see",
                         checked = highContrast,
-                        onCheckedChange = { highContrast = it },
+                        onCheckedChange = {
+                            settingsManager.setHighContrast(it)
+                            vibrate()
+                        },
                         color = Teal40
                     )
                     Divider(modifier = Modifier.padding(vertical = 4.dp))
@@ -131,7 +160,10 @@ fun SettingsScreen(navController: NavController) {
                         title = "Sound Effects",
                         subtitle = "Play sounds during games",
                         checked = soundEnabled,
-                        onCheckedChange = { soundEnabled = it },
+                        onCheckedChange = {
+                            settingsManager.setSoundEnabled(it)
+                            vibrate()
+                        },
                         color = Green40
                     )
                     Divider(modifier = Modifier.padding(vertical = 4.dp))
@@ -140,7 +172,10 @@ fun SettingsScreen(navController: NavController) {
                         title = "Vibration",
                         subtitle = "Vibrate on actions",
                         checked = vibrationEnabled,
-                        onCheckedChange = { vibrationEnabled = it },
+                        onCheckedChange = {
+                            settingsManager.setVibrationEnabled(it)
+                            if (it) vibrate()
+                        },
                         color = GameBlue
                     )
                 }
