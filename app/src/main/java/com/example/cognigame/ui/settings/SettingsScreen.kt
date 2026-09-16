@@ -154,6 +154,7 @@ fun SettingsScreen(navController: NavController) {
                         },
                         color = Teal40
                     )
+                    @Suppress("DEPRECATION")
                     Divider(modifier = Modifier.padding(vertical = 4.dp))
                     SettingToggle(
                         icon = Icons.Default.VolumeUp,
@@ -166,6 +167,7 @@ fun SettingsScreen(navController: NavController) {
                         },
                         color = Green40
                     )
+                    @Suppress("DEPRECATION")
                     Divider(modifier = Modifier.padding(vertical = 4.dp))
                     SettingToggle(
                         icon = Icons.Default.Vibration,

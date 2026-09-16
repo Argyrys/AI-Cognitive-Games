@@ -35,7 +35,7 @@ class SyncManager(context: Context) {
 
     suspend fun saveSessionLocally(session: GameSession) = withContext(Dispatchers.IO) {
         val entity = GameSessionEntity(
-            id = session.id.ifEmpty { System.currentTimeMillis().toString() },
+            id = session.id.ifEmpty { java.util.UUID.randomUUID().toString() },
             userId = session.userId,
             gameType = session.gameType,
             score = session.score,

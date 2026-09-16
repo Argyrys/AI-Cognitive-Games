@@ -17,9 +17,11 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.cognigame.ui.theme.*
+import com.example.cognigame.ui.viewmodel.CogniGameViewModelFactory
 import com.example.cognigame.ui.viewmodel.GameViewModel
 
 data class DisplayScore(
@@ -45,7 +47,11 @@ val tips = listOf(
 @Composable
 fun ReportsScreen(
     navController: NavController,
-    viewModel: GameViewModel = viewModel()
+    viewModel: GameViewModel = viewModel(
+        factory = CogniGameViewModelFactory(
+            LocalContext.current.applicationContext as android.app.Application
+        )
+    )
 ) {
     LaunchedEffect(Unit) {
         viewModel.loadUserSessions("user_1")

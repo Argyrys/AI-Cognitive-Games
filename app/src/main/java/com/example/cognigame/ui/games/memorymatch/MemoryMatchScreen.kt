@@ -14,10 +14,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.cognigame.data.model.GameSession
 import com.example.cognigame.ui.theme.*
+import com.example.cognigame.ui.viewmodel.CogniGameViewModelFactory
 import com.example.cognigame.ui.viewmodel.GameViewModel
 import kotlin.random.Random
 
@@ -32,7 +34,11 @@ data class CardItem(
 @Composable
 fun MemoryMatchScreen(
     navController: NavController,
-    viewModel: GameViewModel = viewModel()
+    viewModel: GameViewModel = viewModel(
+        factory = CogniGameViewModelFactory(
+            LocalContext.current.applicationContext as android.app.Application
+        )
+    )
 ) {
     val emojis = listOf("\uD83C\uDF4E", "\uD83C\uDF4A", "\uD83C\uDF49", "\uD83C\uDF48", "\uD83D\uDC8E", "\u2B50", "\uD83C\uDF3B", "\uD83C\uDF3A")
     var cards by remember { mutableStateOf(generateCards(emojis)) }

@@ -16,17 +16,23 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.cognigame.data.model.UserProfile
 import com.example.cognigame.ui.theme.*
+import com.example.cognigame.ui.viewmodel.CogniGameViewModelFactory
 import com.example.cognigame.ui.viewmodel.ProfileViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     navController: NavController,
-    viewModel: ProfileViewModel = viewModel()
+    viewModel: ProfileViewModel = viewModel(
+        factory = CogniGameViewModelFactory(
+            LocalContext.current.applicationContext as android.app.Application
+        )
+    )
 ) {
     val profile by viewModel.profile.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()

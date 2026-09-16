@@ -14,10 +14,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.cognigame.data.model.GameSession
 import com.example.cognigame.ui.theme.*
+import com.example.cognigame.ui.viewmodel.CogniGameViewModelFactory
 import com.example.cognigame.ui.viewmodel.GameViewModel
 
 data class EmojiPuzzle(
@@ -31,7 +33,11 @@ data class EmojiPuzzle(
 @Composable
 fun EmojiPuzzleScreen(
     navController: NavController,
-    viewModel: GameViewModel = viewModel()
+    viewModel: GameViewModel = viewModel(
+        factory = CogniGameViewModelFactory(
+            LocalContext.current.applicationContext as android.app.Application
+        )
+    )
 ) {
     val puzzles = listOf(
         EmojiPuzzle("\uD83C\uDF19", "Moon", listOf("Sun", "Moon", "Star", "Cloud"), 1),

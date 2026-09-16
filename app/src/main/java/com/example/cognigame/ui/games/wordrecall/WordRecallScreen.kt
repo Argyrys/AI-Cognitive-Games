@@ -16,10 +16,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.cognigame.data.model.GameSession
 import com.example.cognigame.ui.theme.*
+import com.example.cognigame.ui.viewmodel.CogniGameViewModelFactory
 import com.example.cognigame.ui.viewmodel.GameViewModel
 import kotlinx.coroutines.delay
 
@@ -29,7 +31,11 @@ enum class GamePhase { SHOWING, GUESSING, RESULT }
 @Composable
 fun WordRecallScreen(
     navController: NavController,
-    viewModel: GameViewModel = viewModel()
+    viewModel: GameViewModel = viewModel(
+        factory = CogniGameViewModelFactory(
+            LocalContext.current.applicationContext as android.app.Application
+        )
+    )
 ) {
     val wordSets = listOf(
         listOf("\uD83C\uDF4E Apple", "\uD83D\uDC36 Dog", "\u2600\uFE0F Sun", "\uD83C\uDFE0 House", "\uD83C\uDF55 Pizza"),
@@ -121,8 +127,9 @@ fun WordRecallScreen(
                     Spacer(modifier = Modifier.height(12.dp))
                     Button(
                         onClick = {
-                            if (currentInput.isNotBlank()) {
-                                userGuesses = userGuesses + currentInput.trim()
+                            val trimmed = currentInput.trim()
+                            if (trimmed.isNotBlank() && userGuesses.none { it.equals(trimmed, ignoreCase = true) }) {
+                                userGuesses = userGuesses + trimmed
                                 currentInput = ""
                             }
                         },
@@ -139,7 +146,8 @@ fun WordRecallScreen(
                         Spacer(modifier = Modifier.height(8.dp))
                         for (answer in userGuesses) {
                             val isCorrect = currentSet.any { fullWord ->
-                                fullWord.contains(answer, ignoreCase = true)
+                                val wordOnly = fullWord.replace(Regex("[^a-zA-Z]"), "")
+                                wordOnly.equals(answer, ignoreCase = true)
                             }
                             Text(
                                 text = if (isCorrect) "\u2705 $answer" else "\u274C $answer",
@@ -152,10 +160,12 @@ fun WordRecallScreen(
                     Spacer(modifier = Modifier.height(16.dp))
                     Button(
                         onClick = {
+                            val uniqueGuesses = userGuesses.distinct()
                             var correctCount = 0
-                            for (answer in userGuesses) {
+                            for (answer in uniqueGuesses) {
                                 val found = currentSet.any { fullWord ->
-                                    fullWord.contains(answer, ignoreCase = true)
+                                    val wordOnly = fullWord.replace(Regex("[^a-zA-Z]"), "")
+                                    wordOnly.equals(answer, ignoreCase = true)
                                 }
                                 if (found) correctCount++
                             }
@@ -169,7 +179,7 @@ fun WordRecallScreen(
                                     userId = "user_1",
                                     gameType = "word_recall",
                                     score = score,
-                                    maxScore = currentSet.size * 3,
+                                    maxScore = totalRounds * currentSet.size,
                                     roundsPlayed = totalRounds,
                                     duration = duration
                                 )

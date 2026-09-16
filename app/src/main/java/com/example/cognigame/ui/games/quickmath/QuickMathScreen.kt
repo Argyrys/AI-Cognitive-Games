@@ -16,10 +16,12 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.cognigame.data.model.GameSession
 import com.example.cognigame.ui.theme.*
+import com.example.cognigame.ui.viewmodel.CogniGameViewModelFactory
 import com.example.cognigame.ui.viewmodel.GameViewModel
 import kotlinx.coroutines.delay
 
@@ -34,7 +36,11 @@ data class MathProblem(
 @Composable
 fun QuickMathScreen(
     navController: NavController,
-    viewModel: GameViewModel = viewModel()
+    viewModel: GameViewModel = viewModel(
+        factory = CogniGameViewModelFactory(
+            LocalContext.current.applicationContext as android.app.Application
+        )
+    )
 ) {
     var currentProblem by remember { mutableStateOf(generateProblem()) }
     var userAnswer by remember { mutableStateOf("") }
@@ -54,15 +60,14 @@ fun QuickMathScreen(
         } else if (timeLeft == 0 && !gameOver) {
             gameOver = true
             message = "Time's up!"
-            val duration = System.currentTimeMillis() - startTime
             viewModel.saveGameSession(
                 GameSession(
                     userId = "user_1",
                     gameType = "quick_math",
                     score = score,
                     maxScore = totalRounds * 10,
-                    roundsPlayed = totalRounds,
-                    duration = duration
+                    roundsPlayed = round - 1,
+                    duration = System.currentTimeMillis() - startTime
                 )
             )
         }
@@ -156,7 +161,6 @@ fun QuickMathScreen(
                                 round++
                                 if (round > totalRounds) {
                                     gameOver = true
-                                    val duration = System.currentTimeMillis() - startTime
                                     viewModel.saveGameSession(
                                         GameSession(
                                             userId = "user_1",
@@ -164,7 +168,7 @@ fun QuickMathScreen(
                                             score = score,
                                             maxScore = totalRounds * 10,
                                             roundsPlayed = totalRounds,
-                                            duration = duration
+                                            duration = System.currentTimeMillis() - startTime
                                         )
                                     )
                                 } else {
