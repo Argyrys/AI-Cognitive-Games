@@ -10,4 +10,7 @@ object Routes {
     const val SETTINGS = "settings"
     const val REPORTS = "reports"
     const val PROFILE = "profile"
+    const val SEQUENCE_MEMORY = "sequence_memory"
+    const val QUICK_MATH = "quick_math"
+    const val EMOJI_PUZZLE = "emoji_puzzle"
 }

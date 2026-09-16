@@ -48,7 +48,10 @@ fun ReportsScreen(
         listOf(
             DisplayScore("Memory Match", 0, 100, Icons.Default.GridView, GameBlue, "Play to start"),
             DisplayScore("Word Recall", 0, 100, Icons.Default.TextFields, GameOrange, "Play to start"),
-            DisplayScore("Pattern Game", 0, 100, Icons.Default.Pattern, GamePurple, "Play to start")
+            DisplayScore("Pattern Game", 0, 100, Icons.Default.Pattern, GamePurple, "Play to start"),
+            DisplayScore("Sequence Memory", 0, 100, Icons.Default.Looks, GameRed, "Play to start"),
+            DisplayScore("Quick Math", 0, 100, Icons.Default.Calculate, GameYellow, "Play to start"),
+            DisplayScore("Emoji Puzzle", 0, 100, Icons.Default.EmojiEmotions, Teal40, "Play to start")
         )
     } else {
         cognitiveScores.map { score ->
@@ -57,6 +60,9 @@ fun ReportsScreen(
                     "memory_match" -> "Memory Match"
                     "word_recall" -> "Word Recall"
                     "pattern_game" -> "Pattern Game"
+                    "sequence_memory" -> "Sequence Memory"
+                    "quick_math" -> "Quick Math"
+                    "emoji_puzzle" -> "Emoji Puzzle"
                     else -> score.gameType
                 },
                 score = score.score,
@@ -65,12 +71,18 @@ fun ReportsScreen(
                     "memory_match" -> Icons.Default.GridView
                     "word_recall" -> Icons.Default.TextFields
                     "pattern_game" -> Icons.Default.Pattern
+                    "sequence_memory" -> Icons.Default.Looks
+                    "quick_math" -> Icons.Default.Calculate
+                    "emoji_puzzle" -> Icons.Default.EmojiEmotions
                     else -> Icons.Default.Gamepad
                 },
                 color = when (score.gameType) {
                     "memory_match" -> GameBlue
                     "word_recall" -> GameOrange
                     "pattern_game" -> GamePurple
+                    "sequence_memory" -> GameRed
+                    "quick_math" -> GameYellow
+                    "emoji_puzzle" -> Teal40
                     else -> Green40
                 },
                 trend = score.trend
@@ -170,7 +182,7 @@ fun ReportsScreen(
                         }
                         Spacer(modifier = Modifier.height(10.dp))
                         LinearProgressIndicator(
-                            progress = score.score / 100f,
+                            progress = (score.score.toFloat() / score.maxScore.toFloat()).coerceIn(0f, 1f),
                             modifier = Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp)),
                             color = score.color,
                             trackColor = score.color.copy(alpha = 0.15f)

@@ -15,10 +15,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.cognigame.data.local.MemoryBookManager
 import com.example.cognigame.ui.theme.*
 
 data class FamilyMember(
@@ -28,20 +30,54 @@ data class FamilyMember(
     val color: Color
 )
 
+private fun String.toColor(): Color = when (this) {
+    "GameRed" -> GameRed
+    "GameBlue" -> GameBlue
+    "GamePurple" -> GamePurple
+    "GameOrange" -> GameOrange
+    "GameYellow" -> GameYellow
+    "Green40" -> Green40
+    "Teal40" -> Teal40
+    else -> Green40
+}
+
+private fun Color.toColorName(): String = when (this) {
+    GameRed -> "GameRed"
+    GameBlue -> "GameBlue"
+    GamePurple -> "GamePurple"
+    GameOrange -> "GameOrange"
+    GameYellow -> "GameYellow"
+    Green40 -> "Green40"
+    Teal40 -> "Teal40"
+    else -> "Green40"
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MemoryBookScreen(navController: NavController) {
-    var members by remember {
-        mutableStateOf(listOf(
-            FamilyMember("Amma", "Mother", Icons.Default.Female, GameRed),
-            FamilyMember("Appa", "Father", Icons.Default.Male, GameBlue),
-            FamilyMember("Grandma", "Grandmother", Icons.Default.Woman, GamePurple),
-            FamilyMember("Grandpa", "Grandfather", Icons.Default.Man, Green40),
-            FamilyMember("Rahul", "Brother", Icons.Default.Boy, GameOrange),
-            FamilyMember("Priya", "Sister", Icons.Default.Girl, GameYellow),
-            FamilyMember("Dr. Sharma", "Doctor", Icons.Default.LocalHospital, GameBlue),
-            FamilyMember("Neighbor", "Friend", Icons.Default.People, Teal40),
-        ))
+    val context = LocalContext.current
+    val memoryBookManager = remember { MemoryBookManager(context) }
+
+    val defaultMembers = listOf(
+        FamilyMember("Amma", "Mother", Icons.Default.Female, GameRed),
+        FamilyMember("Appa", "Father", Icons.Default.Male, GameBlue),
+        FamilyMember("Grandma", "Grandmother", Icons.Default.Woman, GamePurple),
+        FamilyMember("Grandpa", "Grandfather", Icons.Default.Man, Green40),
+        FamilyMember("Rahul", "Brother", Icons.Default.Boy, GameOrange),
+        FamilyMember("Priya", "Sister", Icons.Default.Girl, GameYellow),
+        FamilyMember("Dr. Sharma", "Doctor", Icons.Default.LocalHospital, GameBlue),
+        FamilyMember("Neighbor", "Friend", Icons.Default.People, Teal40),
+    )
+
+    var members by remember { mutableStateOf(defaultMembers) }
+
+    LaunchedEffect(Unit) {
+        val saved = memoryBookManager.getMembers()
+        if (saved.isNotEmpty()) {
+            members = saved.map { (name, relationship, colorName) ->
+                FamilyMember(name, relationship, Icons.Default.Person, colorName.toColor())
+            }
+        }
     }
 
     var showDialog by remember { mutableStateOf(false) }
@@ -161,7 +197,11 @@ fun MemoryBookScreen(navController: NavController) {
             confirmButton = {
                 TextButton(onClick = {
                     if (newName.isNotBlank() && newRelation.isNotBlank()) {
-                        members = members + FamilyMember(newName, newRelation, Icons.Default.Person, Green40)
+                        val newMember = FamilyMember(newName, newRelation, Icons.Default.Person, Green40)
+                        members = members + newMember
+                        memoryBookManager.saveMembers(
+                            members.map { Triple(it.name, it.relationship, it.color.toColorName()) }
+                        )
                         newName = ""
                         newRelation = ""
                         showDialog = false

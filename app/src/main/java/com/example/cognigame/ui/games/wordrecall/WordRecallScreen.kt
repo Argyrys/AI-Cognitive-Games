@@ -163,19 +163,17 @@ fun WordRecallScreen(
                             totalRounds++
                             resultMessage = "You remembered $correctCount out of ${currentSet.size} words!"
                             phase = GamePhase.RESULT
-                            if (round == 3) {
-                                val duration = System.currentTimeMillis() - startTime
-                                viewModel.saveGameSession(
-                                    GameSession(
-                                        userId = "user_1",
-                                        gameType = "word_recall",
-                                        score = score,
-                                        maxScore = 15,
-                                        roundsPlayed = totalRounds,
-                                        duration = duration
-                                    )
+                            val duration = System.currentTimeMillis() - startTime
+                            viewModel.saveGameSession(
+                                GameSession(
+                                    userId = "user_1",
+                                    gameType = "word_recall",
+                                    score = score,
+                                    maxScore = currentSet.size * 3,
+                                    roundsPlayed = totalRounds,
+                                    duration = duration
                                 )
-                            }
+                            )
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = Green40),
                         modifier = Modifier.fillMaxWidth().height(52.dp),

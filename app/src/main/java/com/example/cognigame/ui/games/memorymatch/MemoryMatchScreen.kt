@@ -218,6 +218,7 @@ fun MemoryMatchScreen(
                                 matchedPairs = 0
                                 gameOver = false
                                 message = ""
+                                startTime = System.currentTimeMillis()
                             },
                             colors = ButtonDefaults.buttonColors(containerColor = GameBlue)
                         ) {

@@ -13,10 +13,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.cognigame.CogniGameApp
 import com.example.cognigame.ui.theme.*
 
 data class ScheduleItem(
@@ -30,25 +32,38 @@ data class ScheduleItem(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DailyScheduleScreen(navController: NavController) {
-    var items by remember {
-        mutableStateOf(listOf(
-            ScheduleItem("07:00 AM", "Wake Up & Freshen Up", Icons.Default.WbSunny, GameYellow),
-            ScheduleItem("07:30 AM", "Morning Exercise", Icons.Default.DirectionsWalk, Green40),
-            ScheduleItem("08:00 AM", "Breakfast", Icons.Default.Restaurant, GameOrange),
-            ScheduleItem("09:00 AM", "Memory Match Game", Icons.Default.GridView, GameBlue),
-            ScheduleItem("10:00 AM", "Word Recall Game", Icons.Default.TextFields, GameOrange),
-            ScheduleItem("11:00 AM", "Family Photo Time", Icons.Default.PhotoLibrary, GameRed),
-            ScheduleItem("12:00 PM", "Lunch", Icons.Default.Restaurant, GameOrange),
-            ScheduleItem("02:00 PM", "Rest / Nap", Icons.Default.Bed, GamePurple),
-            ScheduleItem("03:30 PM", "Pattern Game", Icons.Default.Pattern, GamePurple),
-            ScheduleItem("04:00 PM", "Evening Snack", Icons.Default.Cake, GameYellow),
-            ScheduleItem("05:00 PM", "Walk / Light Activity", Icons.Default.DirectionsWalk, Green40),
-            ScheduleItem("06:00 PM", "Listen to Music", Icons.Default.MusicNote, GamePurple),
-            ScheduleItem("07:00 PM", "Dinner", Icons.Default.Restaurant, GameOrange),
-            ScheduleItem("08:00 PM", "Family Time", Icons.Default.People, GameBlue),
-            ScheduleItem("09:00 PM", "Bedtime", Icons.Default.Bed, GamePurple),
-        ))
+    val context = LocalContext.current
+    val app = context.applicationContext as CogniGameApp
+    val scheduleManager = remember { com.example.cognigame.data.local.ScheduleManager(context) }
+
+    val defaultItems = listOf(
+        ScheduleItem("07:00 AM", "Wake Up & Freshen Up", Icons.Default.WbSunny, GameYellow),
+        ScheduleItem("07:30 AM", "Morning Exercise", Icons.Default.DirectionsWalk, Green40),
+        ScheduleItem("08:00 AM", "Breakfast", Icons.Default.Restaurant, GameOrange),
+        ScheduleItem("09:00 AM", "Memory Match Game", Icons.Default.GridView, GameBlue),
+        ScheduleItem("10:00 AM", "Word Recall Game", Icons.Default.TextFields, GameOrange),
+        ScheduleItem("11:00 AM", "Family Photo Time", Icons.Default.PhotoLibrary, GameRed),
+        ScheduleItem("12:00 PM", "Lunch", Icons.Default.Restaurant, GameOrange),
+        ScheduleItem("02:00 PM", "Rest / Nap", Icons.Default.Bed, GamePurple),
+        ScheduleItem("03:30 PM", "Pattern Game", Icons.Default.Pattern, GamePurple),
+        ScheduleItem("04:00 PM", "Evening Snack", Icons.Default.Cake, GameYellow),
+        ScheduleItem("05:00 PM", "Walk / Light Activity", Icons.Default.DirectionsWalk, Green40),
+        ScheduleItem("06:00 PM", "Listen to Music", Icons.Default.MusicNote, GamePurple),
+        ScheduleItem("07:00 PM", "Dinner", Icons.Default.Restaurant, GameOrange),
+        ScheduleItem("08:00 PM", "Family Time", Icons.Default.People, GameBlue),
+        ScheduleItem("09:00 PM", "Bedtime", Icons.Default.Bed, GamePurple),
+    )
+
+    val completedMap = remember { mutableStateMapOf<String, Boolean>() }
+
+    LaunchedEffect(Unit) {
+        val saved = scheduleManager.getCompletedItems()
+        saved.forEach { (time, completed) ->
+            completedMap[time] = completed
+        }
     }
+
+    val items = defaultItems.map { it.copy(completed = completedMap[it.time] ?: false) }
 
     Scaffold(
         topBar = {
@@ -125,9 +140,10 @@ fun DailyScheduleScreen(navController: NavController) {
                         Checkbox(
                             checked = item.completed,
                             onCheckedChange = { checked ->
-                                items = items.toMutableList().apply {
-                                    this[index] = this[index].copy(completed = checked)
-                                }
+                                completedMap[item.time] = checked
+                                scheduleManager.saveCompletedItems(
+                                    defaultItems.map { it.time to (completedMap[it.time] ?: false) }
+                                )
                             },
                             colors = CheckboxDefaults.colors(checkedColor = Green40)
                         )

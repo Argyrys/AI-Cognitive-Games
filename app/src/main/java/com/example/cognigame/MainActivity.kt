@@ -23,6 +23,9 @@ import com.example.cognigame.ui.memorybook.MemoryBookScreen
 import com.example.cognigame.ui.settings.SettingsScreen
 import com.example.cognigame.ui.reports.ReportsScreen
 import com.example.cognigame.ui.profile.ProfileScreen
+import com.example.cognigame.ui.games.sequence.SequenceMemoryScreen
+import com.example.cognigame.ui.games.quickmath.QuickMathScreen
+import com.example.cognigame.ui.games.emojipuzzle.EmojiPuzzleScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -68,6 +71,15 @@ class MainActivity : ComponentActivity() {
                         }
                         composable(Routes.PROFILE) {
                             ProfileScreen(navController = navController)
+                        }
+                        composable(Routes.SEQUENCE_MEMORY) {
+                            SequenceMemoryScreen(navController = navController)
+                        }
+                        composable(Routes.QUICK_MATH) {
+                            QuickMathScreen(navController = navController)
+                        }
+                        composable(Routes.EMOJI_PUZZLE) {
+                            EmojiPuzzleScreen(navController = navController)
                         }
                     }
                 }

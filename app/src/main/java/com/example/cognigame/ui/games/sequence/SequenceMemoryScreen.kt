@@ -1,4 +1,4 @@
-package com.example.cognigame.ui.games.pattern
+package com.example.cognigame.ui.games.sequence
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -26,15 +27,14 @@ import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PatternGameScreen(
+fun SequenceMemoryScreen(
     navController: NavController,
     viewModel: GameViewModel = viewModel()
 ) {
-    val colors = listOf(GameBlue, GameOrange, GamePurple, GameRed, Green40, GameYellow)
     var sequence by remember { mutableStateOf(listOf<Int>()) }
     var userSequence by remember { mutableStateOf(listOf<Int>()) }
     var showingSequence by remember { mutableStateOf(false) }
-    var highlightedIndex by remember { mutableIntStateOf(-1) }
+    var highlightedNumber by remember { mutableIntStateOf(-1) }
     var round by remember { mutableIntStateOf(1) }
     var score by remember { mutableIntStateOf(0) }
     var gameOver by remember { mutableStateOf(false) }
@@ -43,9 +43,9 @@ fun PatternGameScreen(
     var startTime by remember { mutableLongStateOf(System.currentTimeMillis()) }
 
     fun generateNewRound() {
-        sequence = sequence + (colors.indices).random()
+        sequence = sequence + (1..9).random()
         userSequence = emptyList()
-        message = "Watch the pattern!"
+        message = "Watch the sequence!"
         showingSequence = true
         canTap = false
     }
@@ -56,33 +56,34 @@ fun PatternGameScreen(
 
     LaunchedEffect(showingSequence) {
         if (showingSequence && sequence.isNotEmpty()) {
-            for (i in sequence.indices) {
-                highlightedIndex = i
-                delay(600)
-                highlightedIndex = -1
-                delay(200)
+            delay(500)
+            for (num in sequence) {
+                highlightedNumber = num
+                delay(700)
+                highlightedNumber = -1
+                delay(300)
             }
             showingSequence = false
             canTap = true
-            message = "Your turn! Tap the pattern"
+            message = "Your turn! Tap the numbers in order"
         }
     }
 
     fun checkAnswer() {
         if (userSequence == sequence) {
-            score += round * 10
-            message = "Correct! +${round * 10} points"
+            score += round * 15
+            message = "Correct! +${round * 15} points"
             round++
             canTap = false
             generateNewRound()
         } else {
             gameOver = true
-            message = "Wrong pattern! Game over"
+            message = "Wrong sequence! Game over"
             val duration = System.currentTimeMillis() - startTime
             viewModel.saveGameSession(
                 GameSession(
                     userId = "user_1",
-                    gameType = "pattern_game",
+                    gameType = "sequence_memory",
                     score = score,
                     maxScore = 100,
                     roundsPlayed = round - 1,
@@ -95,14 +96,14 @@ fun PatternGameScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Pattern Game", fontSize = 22.sp) },
+                title = { Text("Sequence Memory", fontSize = 22.sp) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", modifier = Modifier.size(28.dp))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = GamePurple,
+                    containerColor = GameRed,
                     titleContentColor = Color.White,
                     navigationIconContentColor = Color.White
                 )
@@ -120,7 +121,7 @@ fun PatternGameScreen(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("Round: $round", style = MaterialTheme.typography.titleLarge, color = GamePurple)
+                Text("Round: $round", style = MaterialTheme.typography.titleLarge, color = GameRed)
                 Text("Score: $score", style = MaterialTheme.typography.titleLarge, color = GameOrange)
             }
 
@@ -135,41 +136,59 @@ fun PatternGameScreen(
                     modifier = Modifier.padding(20.dp).fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(message, fontSize = 16.sp, color = GamePurple, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                    Text(message, fontSize = 16.sp, color = GameRed, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(14.dp)
-                    ) {
-                        colors.forEachIndexed { index, color ->
-                            Box(
-                                modifier = Modifier
-                                    .size(60.dp)
-                                    .clip(CircleShape)
-                                    .background(
-                                        if (highlightedIndex >= 0 && sequence[highlightedIndex] == index)
-                                            color
-                                        else color.copy(alpha = 0.4f)
-                                    )
-                                    .border(
-                                        width = if (userSequence.contains(index)) 4.dp else 2.dp,
-                                        color = if (userSequence.contains(index)) color else color.copy(alpha = 0.3f),
-                                        shape = CircleShape
-                                    )
-                                    .clickable {
-                                        if (canTap && !gameOver) {
-                                            userSequence = userSequence + index
-                                            if (userSequence.size == sequence.size) {
-                                                canTap = false
-                                                checkAnswer()
+                    val numberColors = listOf(
+                        GameRed, GameBlue, GameOrange,
+                        GamePurple, Green40, GameYellow,
+                        Teal40, GameRed, GameBlue
+                    )
+
+                    for (row in 0 until 3) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(14.dp),
+                            modifier = Modifier.padding(bottom = 14.dp)
+                        ) {
+                            for (col in 0 until 3) {
+                                val number = row * 3 + col + 1
+                                Box(
+                                    modifier = Modifier
+                                        .size(70.dp)
+                                        .clip(CircleShape)
+                                        .background(
+                                            if (highlightedNumber == number)
+                                                numberColors[number - 1]
+                                            else numberColors[number - 1].copy(alpha = 0.3f)
+                                        )
+                                        .border(
+                                            width = if (userSequence.contains(number)) 4.dp else 2.dp,
+                                            color = if (userSequence.contains(number)) numberColors[number - 1] else numberColors[number - 1].copy(alpha = 0.3f),
+                                            shape = CircleShape
+                                        )
+                                        .clickable {
+                                            if (canTap && !gameOver) {
+                                                userSequence = userSequence + number
+                                                if (userSequence.size == sequence.size) {
+                                                    canTap = false
+                                                    checkAnswer()
+                                                }
                                             }
-                                        }
-                                    }
-                            )
+                                        },
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = "$number",
+                                        fontSize = 24.sp,
+                                        color = if (highlightedNumber == number) Color.White else numberColors[number - 1],
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
                     if (userSequence.isNotEmpty()) {
                         Text("Your sequence: ${userSequence.size}/${sequence.size}", fontSize = 14.sp)
@@ -204,7 +223,7 @@ fun PatternGameScreen(
                                 startTime = System.currentTimeMillis()
                                 generateNewRound()
                             },
-                            colors = ButtonDefaults.buttonColors(containerColor = GamePurple)
+                            colors = ButtonDefaults.buttonColors(containerColor = GameRed)
                         ) {
                             Icon(Icons.Default.Refresh, null, modifier = Modifier.size(20.dp))
                             Spacer(modifier = Modifier.width(8.dp))
