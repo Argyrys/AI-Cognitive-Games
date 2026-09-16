@@ -17,10 +17,12 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.cognigame.ui.theme.*
+import com.example.cognigame.ui.viewmodel.GameViewModel
 
-data class CognitiveScore(
+data class DisplayScore(
     val game: String,
     val score: Int,
     val maxScore: Int,
@@ -31,15 +33,52 @@ data class CognitiveScore(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ReportsScreen(navController: NavController) {
-    val scores = listOf(
-        CognitiveScore("Memory Match", 85, 100, Icons.Default.GridView, GameBlue, "Improving"),
-        CognitiveScore("Word Recall", 72, 100, Icons.Default.TextFields, GameOrange, "Stable"),
-        CognitiveScore("Pattern Game", 68, 100, Icons.Default.Pattern, GamePurple, "Improving"),
-        CognitiveScore("Daily Schedule", 90, 100, Icons.Default.Today, Green40, "Excellent"),
-    )
+fun ReportsScreen(
+    navController: NavController,
+    viewModel: GameViewModel = viewModel()
+) {
+    LaunchedEffect(Unit) {
+        viewModel.loadUserSessions("user_1")
+    }
 
-    val overallScore = scores.map { it.score }.average().toInt()
+    val cognitiveScores by viewModel.cognitiveScores.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+
+    val scores = if (cognitiveScores.isEmpty()) {
+        listOf(
+            DisplayScore("Memory Match", 0, 100, Icons.Default.GridView, GameBlue, "Play to start"),
+            DisplayScore("Word Recall", 0, 100, Icons.Default.TextFields, GameOrange, "Play to start"),
+            DisplayScore("Pattern Game", 0, 100, Icons.Default.Pattern, GamePurple, "Play to start")
+        )
+    } else {
+        cognitiveScores.map { score ->
+            DisplayScore(
+                game = when (score.gameType) {
+                    "memory_match" -> "Memory Match"
+                    "word_recall" -> "Word Recall"
+                    "pattern_game" -> "Pattern Game"
+                    else -> score.gameType
+                },
+                score = score.score,
+                maxScore = score.maxScore,
+                icon = when (score.gameType) {
+                    "memory_match" -> Icons.Default.GridView
+                    "word_recall" -> Icons.Default.TextFields
+                    "pattern_game" -> Icons.Default.Pattern
+                    else -> Icons.Default.Gamepad
+                },
+                color = when (score.gameType) {
+                    "memory_match" -> GameBlue
+                    "word_recall" -> GameOrange
+                    "pattern_game" -> GamePurple
+                    else -> Green40
+                },
+                trend = score.trend
+            )
+        }
+    }
+
+    val overallScore = if (scores.isEmpty()) 0 else scores.map { it.score }.average().toInt()
 
     Scaffold(
         topBar = {

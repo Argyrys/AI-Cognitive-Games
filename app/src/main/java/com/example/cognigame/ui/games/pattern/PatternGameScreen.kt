@@ -17,13 +17,19 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.cognigame.data.model.GameSession
 import com.example.cognigame.ui.theme.*
+import com.example.cognigame.ui.viewmodel.GameViewModel
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PatternGameScreen(navController: NavController) {
+fun PatternGameScreen(
+    navController: NavController,
+    viewModel: GameViewModel = viewModel()
+) {
     val colors = listOf(GameBlue, GameOrange, GamePurple, GameRed, Green40, GameYellow)
     var sequence by remember { mutableStateOf(listOf<Int>()) }
     var userSequence by remember { mutableStateOf(listOf<Int>()) }
@@ -34,6 +40,7 @@ fun PatternGameScreen(navController: NavController) {
     var gameOver by remember { mutableStateOf(false) }
     var message by remember { mutableStateOf("") }
     var canTap by remember { mutableStateOf(false) }
+    var startTime by remember { mutableLongStateOf(System.currentTimeMillis()) }
 
     fun generateNewRound() {
         sequence = sequence + (colors.indices).random()
@@ -70,6 +77,17 @@ fun PatternGameScreen(navController: NavController) {
         } else {
             gameOver = true
             message = "Wrong pattern! Game over"
+            val duration = System.currentTimeMillis() - startTime
+            viewModel.saveGameSession(
+                GameSession(
+                    userId = "user_1",
+                    gameType = "pattern_game",
+                    score = score,
+                    maxScore = 100,
+                    roundsPlayed = round - 1,
+                    duration = duration
+                )
+            )
         }
     }
 

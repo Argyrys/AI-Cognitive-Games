@@ -16,15 +16,21 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.cognigame.data.model.GameSession
 import com.example.cognigame.ui.theme.*
+import com.example.cognigame.ui.viewmodel.GameViewModel
 import kotlinx.coroutines.delay
 
 enum class GamePhase { SHOWING, GUESSING, RESULT }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun WordRecallScreen(navController: NavController) {
+fun WordRecallScreen(
+    navController: NavController,
+    viewModel: GameViewModel = viewModel()
+) {
     val wordSets = listOf(
         listOf("\uD83C\uDF4E Apple", "\uD83D\uDC36 Dog", "\u2600\uFE0F Sun", "\uD83C\uDFE0 House", "\uD83C\uDF55 Pizza"),
         listOf("\uD83C\uDF40 Leaf", "\uD83D\uDE97 Car", "\uD83C\uDF19 Moon", "\uD83D\uDCA8 Star", "\uD83C\uDF3F Grass"),
@@ -39,6 +45,8 @@ fun WordRecallScreen(navController: NavController) {
     var score by remember { mutableIntStateOf(0) }
     var round by remember { mutableIntStateOf(1) }
     var resultMessage by remember { mutableStateOf("") }
+    var startTime by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    var totalRounds by remember { mutableIntStateOf(0) }
 
     LaunchedEffect(phase, timeLeft) {
         if (phase == GamePhase.SHOWING && timeLeft > 0) {
@@ -152,8 +160,22 @@ fun WordRecallScreen(navController: NavController) {
                                 if (found) correctCount++
                             }
                             score += correctCount
+                            totalRounds++
                             resultMessage = "You remembered $correctCount out of ${currentSet.size} words!"
                             phase = GamePhase.RESULT
+                            if (round == 3) {
+                                val duration = System.currentTimeMillis() - startTime
+                                viewModel.saveGameSession(
+                                    GameSession(
+                                        userId = "user_1",
+                                        gameType = "word_recall",
+                                        score = score,
+                                        maxScore = 15,
+                                        roundsPlayed = totalRounds,
+                                        duration = duration
+                                    )
+                                )
+                            }
                         },
                         colors = ButtonDefaults.buttonColors(containerColor = Green40),
                         modifier = Modifier.fillMaxWidth().height(52.dp),

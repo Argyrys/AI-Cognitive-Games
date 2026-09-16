@@ -14,8 +14,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.cognigame.data.model.GameSession
 import com.example.cognigame.ui.theme.*
+import com.example.cognigame.ui.viewmodel.GameViewModel
 import kotlin.random.Random
 
 data class CardItem(
@@ -27,7 +30,10 @@ data class CardItem(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MemoryMatchScreen(navController: NavController) {
+fun MemoryMatchScreen(
+    navController: NavController,
+    viewModel: GameViewModel = viewModel()
+) {
     val emojis = listOf("\uD83C\uDF4E", "\uD83C\uDF4A", "\uD83C\uDF49", "\uD83C\uDF48", "\uD83D\uDC8E", "\u2B50", "\uD83C\uDF3B", "\uD83C\uDF3A")
     var cards by remember { mutableStateOf(generateCards(emojis)) }
     var flippedCards by remember { mutableStateOf(listOf<Int>()) }
@@ -35,6 +41,7 @@ fun MemoryMatchScreen(navController: NavController) {
     var matchedPairs by remember { mutableIntStateOf(0) }
     var gameOver by remember { mutableStateOf(false) }
     var message by remember { mutableStateOf("") }
+    var startTime by remember { mutableLongStateOf(System.currentTimeMillis()) }
 
     LaunchedEffect(flippedCards) {
         if (flippedCards.size == 2) {
@@ -63,6 +70,18 @@ fun MemoryMatchScreen(navController: NavController) {
         if (matchedPairs == emojis.size && matchedPairs > 0) {
             gameOver = true
             message = "You won! All pairs matched!"
+            val duration = System.currentTimeMillis() - startTime
+            val score = maxOf(0, 100 - (moves * 2))
+            viewModel.saveGameSession(
+                GameSession(
+                    userId = "user_1",
+                    gameType = "memory_match",
+                    score = score,
+                    maxScore = 100,
+                    roundsPlayed = 1,
+                    duration = duration
+                )
+            )
         }
     }
 
