@@ -40,6 +40,7 @@ fun HomeScreen(navController: NavController) {
         GameTile("Daily Schedule", "Your routine", Icons.Default.Today, Green40, Routes.DAILY_SCHEDULE),
         GameTile("Memory Book", "Family & friends", Icons.Default.PhotoLibrary, GameRed, Routes.MEMORY_BOOK),
         GameTile("My Progress", "View scores", Icons.Default.BarChart, Teal40, Routes.REPORTS),
+        GameTile("My Profile", "Account info", Icons.Default.Person, Teal40, Routes.PROFILE),
     )
 
     Scaffold(

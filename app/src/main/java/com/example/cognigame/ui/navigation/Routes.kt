@@ -9,4 +9,5 @@ object Routes {
     const val MEMORY_BOOK = "memory_book"
     const val SETTINGS = "settings"
     const val REPORTS = "reports"
+    const val PROFILE = "profile"
 }

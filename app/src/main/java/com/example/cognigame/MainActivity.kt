@@ -20,6 +20,7 @@ import com.example.cognigame.ui.dailyschedule.DailyScheduleScreen
 import com.example.cognigame.ui.memorybook.MemoryBookScreen
 import com.example.cognigame.ui.settings.SettingsScreen
 import com.example.cognigame.ui.reports.ReportsScreen
+import com.example.cognigame.ui.profile.ProfileScreen
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -53,6 +54,9 @@ class MainActivity : ComponentActivity() {
                         }
                         composable(Routes.REPORTS) {
                             ReportsScreen(navController = navController)
+                        }
+                        composable(Routes.PROFILE) {
+                            ProfileScreen(navController = navController)
                         }
                     }
                 }
